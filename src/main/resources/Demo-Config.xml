@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+    <bean name="testController" class="com.dyaod.demo.controller.TestController" scope="prototype" init-method="init"/>
+    <bean name="test2Controller" class="com.dyaod.demo.controller.Test2Controller" scope="prototype" init-method="init"/>
+
+    <bean class="com.dyaod.system.netty.url.UrlMap" scope="singleton" init-method="init">
+        <property name="urlMap" >
+            <map>
+                <entry key="/index.do" value="testController#index#post"/>
+                <entry key="/hello.do" value="testController#hello#post" />
+                <entry key="/test2/hello.do" value="test2Controller#hello#get" />
+            </map>
+        </property>
+    </bean>
+
+</beans>

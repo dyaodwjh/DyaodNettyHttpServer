@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 将多个配置文件读取到容器中，交给Spring管理 -->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <!-- 这里支持多种寻址方式：classpath和file -->
+                <value>classpath:application.properties</value>
+                <!-- 推荐使用file的方式引入，这样可以将配置和代码分离 -->
+                <!--<value>file:/opt/demo/config/demo-mq.properties</value>-->
+            </list>
+        </property>
+    </bean>
+
+    <context:annotation-config/>
+    <context:component-scan base-package="com.dyaod.system"/>
+    <context:component-scan base-package="com.dyaod.app"/>
+
+    <bean class="com.dyaod.system.config.AppConfig"  init-method="init">
+        <property name="port" value="${port}"/>
+        <property name="bossGroupSize" value="${bossGroupSize}"/>
+        <property name="workerGroupSize" value="${workerGroupSize}"/>
+    </bean>
+
+    <bean name="httpRequestDecoder" class="io.netty.handler.codec.http.HttpRequestDecoder" scope="prototype"/>
+    <bean name="httpResponseEncoder" class="io.netty.handler.codec.http.HttpResponseEncoder" scope="prototype"/>
+    <!--  //设置块的最大字节数,可以接受最大post的内容大小为 65536。
+          //缺点:开大了，会浪费空间。并且在接受到的字符串的最后，会出现空白的字符串，这是由于post的内容长度小于chunk里边的ChannelBuffer的数组的大小，程序给予补全 -->
+    <bean name="httpObjectAggregator"  class="io.netty.handler.codec.http.HttpObjectAggregator" scope="prototype">
+        <constructor-arg value="65536"/>
+    </bean>
+    <bean name="chunkedWriteHandler" class="io.netty.handler.stream.ChunkedWriteHandler" scope="prototype"/>
+    <bean name="simpleHttpServerHandler" class="com.dyaod.system.netty.handler.SimpleHttpServerHandler" scope="prototype"/>
+
+
+    <bean class="com.dyaod.system.netty.NettyService" init-method="init">
+        <property name="channelHandlerLinkedMap">
+                <map>
+                    <entry key="http-decoder" value="httpRequestDecoder"/>
+                    <entry key="http-aggregator" value="httpObjectAggregator"/>
+                    <entry key="http-encoder" value="httpResponseEncoder"/>
+                    <entry key="http-chunked" value="chunkedWriteHandler"/>
+                    <entry key="my-business" value="simpleHttpServerHandler"/>
+                </map>
+        </property>
+    </bean>
+
+    <import resource="Demo-Config.xml"/>
+
+</beans>
